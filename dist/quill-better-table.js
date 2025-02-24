@@ -1961,8 +1961,9 @@ class BetterTable extends Module {
     // since only one matched bindings callback will excute.
     // expected my binding callback excute first
     // I changed the order of binding callbacks
-    let thisBinding = quill.keyboard.bindings['Backspace'].pop();
-    quill.keyboard.bindings['Backspace'].splice(0, 1, thisBinding);
+    //explained here, change backspace to 8 https://github.com/soccerloway/quill-better-table/issues/93
+    let thisBinding = quill.keyboard.bindings["8"].pop();
+    quill.keyboard.bindings["8"].splice(0, 1, thisBinding);
 
     // add Matchers to match and render quill-better-table for initialization
     // or pasting
@@ -2273,7 +2274,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("fa154acdc98967acf6f1")
+/******/ 		__webpack_require__.h = () => ("c1ab20588d42037d7a8f")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
