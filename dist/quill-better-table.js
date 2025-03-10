@@ -24,7 +24,7 @@ __webpack_require__.d(__webpack_exports__, {
 // EXTERNAL MODULE: external {"commonjs":"quill","commonjs2":"quill","amd":"quill","root":"Quill"}
 var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_ = __webpack_require__(912);
 var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_);
-;// CONCATENATED MODULE: ./src/utils/index.js
+;// ./src/utils/index.js
 function css(domNode, rules) {
   if (typeof rules === 'object') {
     for (let prop in rules) {
@@ -115,7 +115,7 @@ function convertToHex(rgb) {
   }
   return rgb;
 }
-;// CONCATENATED MODULE: ./src/modules/table-column-tool.js
+;// ./src/modules/table-column-tool.js
 
 
 const COL_TOOL_HEIGHT = 12;
@@ -280,7 +280,7 @@ function computeCellsNumber(CellsInFirstRow) {
     return sum;
   }, 0);
 }
-;// CONCATENATED MODULE: ./src/formats/header.js
+;// ./src/formats/header.js
 
 
 const Block = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default()["import"]("blots/block");
@@ -378,7 +378,7 @@ class Header extends Block {
 Header.blotName = 'header';
 Header.tagName = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 /* harmony default export */ const header = (Header);
-;// CONCATENATED MODULE: ./src/formats/table.js
+;// ./src/formats/table.js
 
 
 
@@ -409,11 +409,17 @@ class TableCellLine extends table_Block {
     if (value['cell-bg']) {
       node.setAttribute('data-cell-bg', value['cell-bg']);
     }
+    if (value['cell-border']) {
+      node.setAttribute('data-cell-border', value['cell-border']);
+    }
+    if (value['cell-valign']) {
+      node.setAttribute('data-cell-valign', value['cell-valign']);
+    }
     return node;
   }
   static formats(domNode) {
     const formats = {};
-    return CELL_ATTRIBUTES.concat(CELL_IDENTITY_KEYS).concat(['cell-bg']).reduce((formats, attribute) => {
+    return CELL_ATTRIBUTES.concat(CELL_IDENTITY_KEYS).concat(['cell-bg', 'cell-border', 'cell-valign']).reduce((formats, attribute) => {
       if (domNode.hasAttribute(`data-${attribute}`)) {
         formats[attribute] = domNode.getAttribute(`data-${attribute}`) || undefined;
       }
@@ -432,6 +438,18 @@ class TableCellLine extends table_Block {
         this.domNode.setAttribute('data-cell-bg', value);
       } else {
         this.domNode.removeAttribute('data-cell-bg');
+      }
+    } else if (name === 'cell-border') {
+      if (value) {
+        this.domNode.setAttribute('data-cell-border', value);
+      } else {
+        this.domNode.removeAttribute('data-cell-border');
+      }
+    } else if (name === 'cell-valign') {
+      if (value) {
+        this.domNode.setAttribute(`data-${name}`, value);
+      } else {
+        this.domNode.removeAttribute(`data-${name}`);
       }
     } else if (name === 'header') {
       if (!value) return;
@@ -459,12 +477,16 @@ class TableCellLine extends table_Block {
     const rowspan = this.domNode.getAttribute('data-rowspan');
     const colspan = this.domNode.getAttribute('data-colspan');
     const cellBg = this.domNode.getAttribute('data-cell-bg');
+    const cellBorder = this.domNode.getAttribute('data-cell-border');
+    const cellValign = this.domNode.getAttribute('data-cell-valign');
     if (this.statics.requiredContainer && !(this.parent instanceof this.statics.requiredContainer)) {
       this.wrap(this.statics.requiredContainer.blotName, {
         row: rowId,
         colspan,
         rowspan,
-        'cell-bg': cellBg
+        'cell-bg': cellBg,
+        'cell-border': cellBorder,
+        'cell-valign': cellValign
       });
     }
     super.optimize(context);
@@ -499,6 +521,12 @@ class TableCell extends Container {
       node.setAttribute('data-cell-bg', value['cell-bg']);
       node.style.backgroundColor = value['cell-bg'];
     }
+    if (value['cell-border']) {
+      node.setAttribute('data-cell-border', value['cell-border']);
+    }
+    if (value['cell-valign']) {
+      node.setAttribute('data-cell-valign', value['cell-valign']);
+    }
     return node;
   }
   static formats(domNode) {
@@ -508,6 +536,12 @@ class TableCell extends Container {
     }
     if (domNode.hasAttribute("data-cell-bg")) {
       formats["cell-bg"] = domNode.getAttribute("data-cell-bg");
+    }
+    if (domNode.hasAttribute("data-cell-border")) {
+      formats["cell-border"] = domNode.getAttribute("data-cell-border");
+    }
+    if (domNode.hasAttribute("data-cell-valign")) {
+      formats["cell-valign"] = domNode.getAttribute("data-cell-valign");
     }
     return CELL_ATTRIBUTES.reduce((formats, attribute) => {
       if (domNode.hasAttribute(attribute)) {
@@ -529,6 +563,12 @@ class TableCell extends Container {
     }
     if (this.domNode.hasAttribute("data-cell-bg")) {
       formats["cell-bg"] = this.domNode.getAttribute("data-cell-bg");
+    }
+    if (this.domNode.hasAttribute("data-cell-border")) {
+      formats["cell-border"] = this.domNode.getAttribute("data-cell-border");
+    }
+    if (this.domNode.hasAttribute("data-cell-valign")) {
+      formats["cell-valign"] = this.domNode.getAttribute("data-cell-valign");
     }
     return CELL_ATTRIBUTES.reduce((formats, attribute) => {
       if (this.domNode.hasAttribute(attribute)) {
@@ -564,6 +604,12 @@ class TableCell extends Container {
       } else {
         this.domNode.style.backgroundColor = 'initial';
       }
+    } else if (name === 'cell-border') {
+      this.toggleAttribute('data-cell-border', value);
+      this.formatChildren(name, value);
+    } else if (name === 'cell-valign') {
+      this.toggleAttribute('data-cell-valign', value);
+      this.formatChildren(name, value);
     } else {
       super.format(name, value);
     }
@@ -709,9 +755,7 @@ class TableContainer extends Container {
   colGroup() {
     return this.children.head;
   }
-  deleteColumns(compareRect) {
-    let delIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    let editorWrapper = arguments.length > 2 ? arguments[2] : undefined;
+  deleteColumns(compareRect, delIndexes = [], editorWrapper) {
     const [body] = this.descendants(TableBody);
     if (body == null || body.children.head == null) return;
     const tableCells = this.descendants(TableCell);
@@ -834,9 +878,7 @@ class TableContainer extends Container {
       tableRow.appendChild(tableCell);
     }
   }
-  insertColumn(compareRect, colIndex) {
-    let isRight = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-    let editorWrapper = arguments.length > 3 ? arguments[3] : undefined;
+  insertColumn(compareRect, colIndex, isRight = true, editorWrapper) {
     const [body] = this.descendants(TableBody);
     const [tableColGroup] = this.descendants(TableColGroup);
     const tableCols = this.descendants(TableCol);
@@ -1099,7 +1141,7 @@ function cellId() {
   return `cell-${id}`;
 }
 
-;// CONCATENATED MODULE: ./src/modules/table-selection.js
+;// ./src/modules/table-selection.js
 
 
 
@@ -1286,52 +1328,52 @@ function computeBoundaryFromRects(startRect, endRect) {
     height
   };
 }
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_1.svg
+;// ./src/assets/icons/icon_operation_1.svg
 // Module
-var code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M73.142857 336.64h526.628572v43.885714H73.142857zM73.142857 643.657143h526.628572v43.885714H73.142857zM336.457143 117.028571h43.885714v789.942858h-43.885714zM204.8 73.142857h614.4a131.657143 131.657143 0 0 1 131.657143 131.657143v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.84 131.84 0 0 1 204.8 73.142857z m0 43.885714a87.771429 87.771429 0 0 0-87.771429 87.771429v614.4a87.771429 87.771429 0 0 0 87.771429 87.771429h614.4a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM819.2 73.142857h-219.428571v877.714286h219.428571a131.657143 131.657143 0 0 0 131.657143-131.657143V204.8A131.84 131.84 0 0 0 819.2 73.142857z m44.068571 460.982857h-65.828571v65.828572H753.371429v-65.828572h-65.828572V490.057143h65.828572v-65.828572h44.068571v65.828572h65.828571z\"/></svg>";
+var code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M73.142857 336.64h526.628572v43.885714H73.142857zM73.142857 643.657143h526.628572v43.885714H73.142857zM336.457143 117.028571h43.885714v789.942858h-43.885714zM204.8 73.142857h614.4a131.657143 131.657143 0 0 1 131.657143 131.657143v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.84 131.84 0 0 1 204.8 73.142857z m0 43.885714a87.771429 87.771429 0 0 0-87.771429 87.771429v614.4a87.771429 87.771429 0 0 0 87.771429 87.771429h614.4a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM819.2 73.142857h-219.428571v877.714286h219.428571a131.657143 131.657143 0 0 0 131.657143-131.657143V204.8A131.84 131.84 0 0 0 819.2 73.142857z m44.068571 460.982857h-65.828571v65.828572H753.371429v-65.828572h-65.828572V490.057143h65.828572v-65.828572h44.068571v65.828572h65.828571z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_1 = (code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_2.svg
+;// ./src/assets/icons/icon_operation_2.svg
 // Module
-var icon_operation_2_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M380.342857 336.457143h526.811429v43.885714H380.342857z m0 307.2h526.811429v43.885714H380.342857zM643.657143 117.028571h43.885714v789.942858h-43.885714zM204.8 73.142857h614.582857A131.474286 131.474286 0 0 1 950.857143 204.8v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.657143 131.657143 0 0 1 204.8 73.142857z m0 43.885714a87.588571 87.588571 0 0 0-87.588571 87.771429v614.4a87.588571 87.588571 0 0 0 87.588571 87.771429h614.582857a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM204.8 73.142857A131.657143 131.657143 0 0 0 73.142857 204.8v614.4a131.657143 131.657143 0 0 0 131.657143 131.657143h219.428571V73.142857z m131.84 460.8h-65.828571v65.828572h-43.885715v-65.828572h-65.828571v-43.885714h65.828571v-65.828572h43.885715v65.828572h65.828571z\"/></svg>";
+var icon_operation_2_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M380.342857 336.457143h526.811429v43.885714H380.342857z m0 307.2h526.811429v43.885714H380.342857zM643.657143 117.028571h43.885714v789.942858h-43.885714zM204.8 73.142857h614.582857A131.474286 131.474286 0 0 1 950.857143 204.8v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.657143 131.657143 0 0 1 204.8 73.142857z m0 43.885714a87.588571 87.588571 0 0 0-87.588571 87.771429v614.4a87.588571 87.588571 0 0 0 87.588571 87.771429h614.582857a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM204.8 73.142857A131.657143 131.657143 0 0 0 73.142857 204.8v614.4a131.657143 131.657143 0 0 0 131.657143 131.657143h219.428571V73.142857z m131.84 460.8h-65.828571v65.828572h-43.885715v-65.828572h-65.828571v-43.885714h65.828571v-65.828572h43.885715v65.828572h65.828571z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_2 = (icon_operation_2_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_3.svg
+;// ./src/assets/icons/icon_operation_3.svg
 // Module
-var icon_operation_3_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M73.142857 599.771429h877.714286v43.885714H73.142857zM336.457143 380.342857h43.885714v526.628572h-43.885714z m307.2 0h43.885714v526.628572h-43.885714zM204.8 73.142857h614.4a131.657143 131.657143 0 0 1 131.657143 131.657143v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.657143 131.657143 0 0 1 204.8 73.142857z m0 43.885714a87.771429 87.771429 0 0 0-87.771429 87.771429v614.4a87.588571 87.588571 0 0 0 87.771429 87.771429h614.4a87.588571 87.588571 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM819.2 73.142857H204.8A131.657143 131.657143 0 0 0 73.142857 204.8v219.428571h877.714286v-219.428571A131.657143 131.657143 0 0 0 819.2 73.142857z m-219.428571 197.485714h-65.828572v65.828572h-43.885714v-65.828572h-65.828572v-43.885714h65.828572V160.914286h43.885714v65.828571h65.828572z\"/></svg>";
+var icon_operation_3_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M73.142857 599.771429h877.714286v43.885714H73.142857zM336.457143 380.342857h43.885714v526.628572h-43.885714z m307.2 0h43.885714v526.628572h-43.885714zM204.8 73.142857h614.4a131.657143 131.657143 0 0 1 131.657143 131.657143v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.657143 131.657143 0 0 1 204.8 73.142857z m0 43.885714a87.771429 87.771429 0 0 0-87.771429 87.771429v614.4a87.588571 87.588571 0 0 0 87.771429 87.771429h614.4a87.588571 87.588571 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM819.2 73.142857H204.8A131.657143 131.657143 0 0 0 73.142857 204.8v219.428571h877.714286v-219.428571A131.657143 131.657143 0 0 0 819.2 73.142857z m-219.428571 197.485714h-65.828572v65.828572h-43.885714v-65.828572h-65.828572v-43.885714h65.828572V160.914286h43.885714v65.828571h65.828572z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_3 = (icon_operation_3_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_4.svg
+;// ./src/assets/icons/icon_operation_4.svg
 // Module
-var icon_operation_4_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M204.8 73.142857h614.4a131.657143 131.657143 0 0 1 131.657143 131.657143v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.84 131.84 0 0 1 204.8 73.142857z m0 43.885714a87.771429 87.771429 0 0 0-87.771429 87.771429v614.4a87.771429 87.771429 0 0 0 87.771429 87.771429h614.4a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM73.142857 336.457143h877.714286v44.068571H73.142857zM336.64 117.028571h43.885714v526.628572h-43.885714z m307.017143 0h44.068571v526.628572H643.657143zM73.142857 599.771429v219.428571a131.657143 131.657143 0 0 0 131.657143 131.657143h614.4a131.657143 131.657143 0 0 0 131.657143-131.657143v-219.428571z m526.628572 197.485714h-65.645715v65.828571H490.057143v-65.828571h-65.828572v-43.885714h65.828572v-65.828572h44.068571v65.828572h65.645715z\"/></svg>";
+var icon_operation_4_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M204.8 73.142857h614.4a131.657143 131.657143 0 0 1 131.657143 131.657143v614.4a131.657143 131.657143 0 0 1-131.657143 131.657143H204.8A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.84 131.84 0 0 1 204.8 73.142857z m0 43.885714a87.771429 87.771429 0 0 0-87.771429 87.771429v614.4a87.771429 87.771429 0 0 0 87.771429 87.771429h614.4a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM73.142857 336.457143h877.714286v44.068571H73.142857zM336.64 117.028571h43.885714v526.628572h-43.885714z m307.017143 0h44.068571v526.628572H643.657143zM73.142857 599.771429v219.428571a131.657143 131.657143 0 0 0 131.657143 131.657143h614.4a131.657143 131.657143 0 0 0 131.657143-131.657143v-219.428571z m526.628572 197.485714h-65.645715v65.828571H490.057143v-65.828571h-65.828572v-43.885714h65.828572v-65.828572h44.068571v65.828572h65.645715z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_4 = (icon_operation_4_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_5.svg
+;// ./src/assets/icons/icon_operation_5.svg
 // Module
-var icon_operation_5_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M925.99596 99.038384c-25.470707-25.6-60.121212-39.822222-96.323233-39.822222H194.19798c-36.072727 0-70.723232 14.351515-96.323233 39.822222-25.6 25.6-39.822222 60.121212-39.822222 96.323232v635.474748c0 36.072727 14.351515 70.723232 39.822222 96.323232C123.474747 952.759596 158.125253 967.111111 194.19798 967.111111h635.474747c36.072727 0 70.723232-14.351515 96.323233-39.951515 25.6-25.6 39.951515-60.121212 39.951515-96.323232V195.361616c0-36.072727-14.351515-70.723232-39.951515-96.323232z m-277.850505 5.559596v226.909091H375.725253V104.59798h272.420202zM103.434343 195.361616c0-24.048485 9.567677-47.191919 26.634344-64.129293 17.066667-17.066667 40.080808-26.634343 64.129293-26.634343h136.145454v226.909091H103.434343V195.361616z m90.763637 726.367677c-24.048485 0-47.191919-9.567677-64.129293-26.634344-17.066667-17.066667-26.634343-40.080808-26.634344-64.129292V649.309091h226.909091v272.420202H194.19798z m181.527273 0V649.309091h272.290909v272.420202H375.725253z m544.711111-90.892929c0 24.048485-9.567677 47.191919-26.634344 64.129293-17.066667 17.066667-40.080808 26.634343-64.129293 26.634343H693.527273V649.309091h226.909091v181.527273zM693.527273 331.507071V104.59798h136.145454c24.048485 0 47.191919 9.567677 64.129293 26.634343 17.066667 17.066667 26.634343 40.080808 26.634344 64.129293v136.145455H693.527273z\"/></svg>";
+var icon_operation_5_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M925.99596 99.038384c-25.470707-25.6-60.121212-39.822222-96.323233-39.822222H194.19798c-36.072727 0-70.723232 14.351515-96.323233 39.822222-25.6 25.6-39.822222 60.121212-39.822222 96.323232v635.474748c0 36.072727 14.351515 70.723232 39.822222 96.323232C123.474747 952.759596 158.125253 967.111111 194.19798 967.111111h635.474747c36.072727 0 70.723232-14.351515 96.323233-39.951515 25.6-25.6 39.951515-60.121212 39.951515-96.323232V195.361616c0-36.072727-14.351515-70.723232-39.951515-96.323232z m-277.850505 5.559596v226.909091H375.725253V104.59798h272.420202zM103.434343 195.361616c0-24.048485 9.567677-47.191919 26.634344-64.129293 17.066667-17.066667 40.080808-26.634343 64.129293-26.634343h136.145454v226.909091H103.434343V195.361616z m90.763637 726.367677c-24.048485 0-47.191919-9.567677-64.129293-26.634344-17.066667-17.066667-26.634343-40.080808-26.634344-64.129292V649.309091h226.909091v272.420202H194.19798z m181.527273 0V649.309091h272.290909v272.420202H375.725253z m544.711111-90.892929c0 24.048485-9.567677 47.191919-26.634344 64.129293-17.066667 17.066667-40.080808 26.634343-64.129293 26.634343H693.527273V649.309091h226.909091v181.527273zM693.527273 331.507071V104.59798h136.145454c24.048485 0 47.191919 9.567677 64.129293 26.634343 17.066667 17.066667 26.634343 40.080808 26.634344 64.129293v136.145455H693.527273z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_5 = (icon_operation_5_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_6.svg
+;// ./src/assets/icons/icon_operation_6.svg
 // Module
-var icon_operation_6_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M336.457143 73.142857h43.885714v877.714286h-43.885714z m307.382857 0h43.702857v877.714286h-43.702857z m-438.857143 0h614.4A131.657143 131.657143 0 0 1 950.857143 204.8v614.4a131.474286 131.474286 0 0 1-131.474286 131.657143h-614.4A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.84 131.84 0 0 1 204.982857 73.142857z m0 43.885714a87.588571 87.588571 0 0 0-87.771428 87.771429v614.4a87.588571 87.588571 0 0 0 87.771428 87.771429h614.4a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM73.142857 336.457143h877.714286v307.2H73.142857z m292.571429 43.885714v219.428572h292.571428v-219.428572z\"/></svg>";
+var icon_operation_6_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M336.457143 73.142857h43.885714v877.714286h-43.885714z m307.382857 0h43.702857v877.714286h-43.702857z m-438.857143 0h614.4A131.657143 131.657143 0 0 1 950.857143 204.8v614.4a131.474286 131.474286 0 0 1-131.474286 131.657143h-614.4A131.657143 131.657143 0 0 1 73.142857 819.2V204.8A131.84 131.84 0 0 1 204.982857 73.142857z m0 43.885714a87.588571 87.588571 0 0 0-87.771428 87.771429v614.4a87.588571 87.588571 0 0 0 87.771428 87.771429h614.4a87.771429 87.771429 0 0 0 87.771429-87.771429V204.8a87.771429 87.771429 0 0 0-87.771429-87.771429zM73.142857 336.457143h877.714286v307.2H73.142857z m292.571429 43.885714v219.428572h292.571428v-219.428572z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_6 = (icon_operation_6_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_7.svg
+;// ./src/assets/icons/icon_operation_7.svg
 // Module
-var icon_operation_7_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M925.996 99.038c-25.47-25.6-60.121-39.822-96.323-39.822H194.198c-75.12 0.13-136.016 61.026-136.145 136.146v635.345c0 36.073 14.351 70.723 39.822 96.323 25.6 25.73 60.25 40.081 96.323 40.081h635.475c36.072 0 70.723-14.351 96.323-39.951 25.6-25.6 39.951-60.122 39.951-96.324V195.362c0-36.073-14.351-70.724-39.951-96.324z m-365.77 494.287L512 545.228l-48.226 48.097-32.194-31.935 48.355-48.226-48.226-48.097 32.194-32.194L512 480.97l48.097-48.097 32.194 32.194-48.097 48.097 48.226 48.226-32.194 31.935zM103.434 195.362c0-24.049 9.568-47.192 26.635-64.13 17.066-17.066 40.08-26.634 64.129-26.634h136.145v226.91H103.434V195.361z m0 181.656h226.91V649.31h-226.91V377.02z m90.764 544.84c-24.049 0-47.192-9.567-64.13-26.634-17.066-17.066-26.634-40.08-26.634-64.258V694.69h226.91v227.168H194.197z m726.238-90.763c0 24.048-9.438 47.192-26.505 64.259-17.066 17.066-40.21 26.634-64.258 26.505H693.527V694.69h226.91v136.404z m0-181.786H693.527V377.02h226.91v272.29zM693.527 331.507V104.598h136.146c24.048 0 47.192 9.438 64.258 26.505 17.067 17.067 26.635 40.21 26.505 64.259v136.145H693.527z\"/></svg>";
+var icon_operation_7_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M925.996 99.038c-25.47-25.6-60.121-39.822-96.323-39.822H194.198c-75.12 0.13-136.016 61.026-136.145 136.146v635.345c0 36.073 14.351 70.723 39.822 96.323 25.6 25.73 60.25 40.081 96.323 40.081h635.475c36.072 0 70.723-14.351 96.323-39.951 25.6-25.6 39.951-60.122 39.951-96.324V195.362c0-36.073-14.351-70.724-39.951-96.324z m-365.77 494.287L512 545.228l-48.226 48.097-32.194-31.935 48.355-48.226-48.226-48.097 32.194-32.194L512 480.97l48.097-48.097 32.194 32.194-48.097 48.097 48.226 48.226-32.194 31.935zM103.434 195.362c0-24.049 9.568-47.192 26.635-64.13 17.066-17.066 40.08-26.634 64.129-26.634h136.145v226.91H103.434V195.361z m0 181.656h226.91V649.31h-226.91V377.02z m90.764 544.84c-24.049 0-47.192-9.567-64.13-26.634-17.066-17.066-26.634-40.08-26.634-64.258V694.69h226.91v227.168H194.197z m726.238-90.763c0 24.048-9.438 47.192-26.505 64.259-17.066 17.066-40.21 26.634-64.258 26.505H693.527V694.69h226.91v136.404z m0-181.786H693.527V377.02h226.91v272.29zM693.527 331.507V104.598h136.146c24.048 0 47.192 9.438 64.258 26.505 17.067 17.067 26.635 40.21 26.505 64.259v136.145H693.527z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_7 = (icon_operation_7_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_8.svg
+;// ./src/assets/icons/icon_operation_8.svg
 // Module
-var icon_operation_8_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M925.99596 99.038384c-25.470707-25.6-60.121212-39.822222-96.323233-39.822222H194.19798c-36.072727 0-70.723232 14.351515-96.323233 39.822222-25.6 25.6-39.822222 60.121212-39.822222 96.323232v635.474748c0 36.072727 14.351515 70.723232 39.822222 96.323232C123.474747 952.759596 158.125253 967.111111 194.19798 967.111111h635.474747c36.072727 0 70.723232-14.351515 96.323233-39.951515 25.6-25.6 39.951515-60.121212 39.951515-96.323232V195.361616c0-36.072727-14.351515-70.723232-39.951515-96.323232z m-550.270707 5.559596h272.290909v227.167677H375.725253V104.59798z m56.242424 360.468687l31.935353-32.19394 48.09697 48.226263 48.09697-48.226263 32.193939 32.19394-48.09697 48.096969 48.226263 48.226263-32.193939 31.935354-48.226263-48.09697-48.226263 48.09697-31.935353-31.935354 48.226262-48.226263-48.096969-48.096969zM103.434343 195.361616c0-24.048485 9.567677-47.191919 26.634344-64.129293 17.066667-17.066667 40.080808-26.634343 64.129293-26.634343h136.145454v227.167677H103.434343V195.361616z m817.002021 635.733333c0 24.048485-9.567677 47.191919-26.634344 64.258586-17.066667 17.066667-40.080808 26.634343-64.129293 26.634344H194.19798c-24.048485 0-47.191919-9.567677-64.258586-26.634344C112.872727 878.157576 103.434343 855.014141 103.434343 830.836364V694.690909h226.909091v226.909091h45.381819V694.690909h272.290909v226.909091h45.381818V694.690909h226.909091v136.40404z m0-499.329292H693.527273V104.59798h136.145454c24.048485 0 47.191919 9.567677 64.129293 26.634343 17.066667 17.066667 26.634343 40.080808 26.634344 64.129293v136.404041z\"/></svg>";
+var icon_operation_8_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M925.99596 99.038384c-25.470707-25.6-60.121212-39.822222-96.323233-39.822222H194.19798c-36.072727 0-70.723232 14.351515-96.323233 39.822222-25.6 25.6-39.822222 60.121212-39.822222 96.323232v635.474748c0 36.072727 14.351515 70.723232 39.822222 96.323232C123.474747 952.759596 158.125253 967.111111 194.19798 967.111111h635.474747c36.072727 0 70.723232-14.351515 96.323233-39.951515 25.6-25.6 39.951515-60.121212 39.951515-96.323232V195.361616c0-36.072727-14.351515-70.723232-39.951515-96.323232z m-550.270707 5.559596h272.290909v227.167677H375.725253V104.59798z m56.242424 360.468687l31.935353-32.19394 48.09697 48.226263 48.09697-48.226263 32.193939 32.19394-48.09697 48.096969 48.226263 48.226263-32.193939 31.935354-48.226263-48.09697-48.226263 48.09697-31.935353-31.935354 48.226262-48.226263-48.096969-48.096969zM103.434343 195.361616c0-24.048485 9.567677-47.191919 26.634344-64.129293 17.066667-17.066667 40.080808-26.634343 64.129293-26.634343h136.145454v227.167677H103.434343V195.361616z m817.002021 635.733333c0 24.048485-9.567677 47.191919-26.634344 64.258586-17.066667 17.066667-40.080808 26.634343-64.129293 26.634344H194.19798c-24.048485 0-47.191919-9.567677-64.258586-26.634344C112.872727 878.157576 103.434343 855.014141 103.434343 830.836364V694.690909h226.909091v226.909091h45.381819V694.690909h272.290909v226.909091h45.381818V694.690909h226.909091v136.40404z m0-499.329292H693.527273V104.59798h136.145454c24.048485 0 47.191919 9.567677 64.129293 26.634343 17.066667 17.066667 26.634343 40.080808 26.634344 64.129293v136.404041z"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_8 = (icon_operation_8_code);
-;// CONCATENATED MODULE: ./src/assets/icons/icon_operation_9.svg
+;// ./src/assets/icons/icon_operation_9.svg
 // Module
-var icon_operation_9_code = "<?xml version=\"1.0\" standalone=\"no\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg class=\"icon\" width=\"20px\" height=\"20.00px\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"#595959\" d=\"M764.42168889 830.5152c0 30.23530667-24.61013333 54.84430222-54.84316444 54.84430222H314.42147555c-30.23416889 0-54.84316445-24.61013333-54.84316444-54.84430222V248.32796445h504.84337778v582.18723555zM369.26577778 149.89084445c0-6.32832 4.92202667-11.25034667 11.25034667-11.25034667H644.18702222c6.32832 0 11.25034667 4.92202667 11.25034667 11.25034667v33.04675555H369.26577778V149.89084445z m559.68768 33.04675555H720.82773333V149.89084445c0-42.1888-34.45191111-76.64071111-76.64071111-76.64071112H380.51612445c-42.1888 0-76.64071111 34.45191111-76.64071112 76.64071112v33.04675555h-208.82773333c-18.28181333 0-33.04789333 14.76608-33.04789333 33.04675555s14.76608 33.04675555 33.04675555 33.04675556h98.43825778v581.48408889c0 66.79779555 54.14001778 120.93781333 120.93667555 120.93781333h395.1570489c66.79665778 0 120.93667555-54.14001778 120.93667555-120.93781333V248.32796445h98.43825778c18.28067555 0 33.04675555-14.76494222 33.04675555-33.04675556s-14.76608-32.34360889-33.04675555-32.34360889zM512 786.21923555c18.28181333 0 33.04675555-14.76608 33.04675555-33.04789333v-351.56195555c0-18.28181333-14.76494222-33.04675555-33.04675555-33.04675556s-33.04675555 14.76494222-33.04675555 33.04675556v351.56195555c0 18.28181333 14.76494222 33.04789333 33.04675555 33.04789333m-153.98456889 0c18.28181333 0 33.04675555-14.76608 33.04675556-33.04789333v-351.56195555c0-18.28181333-14.76494222-33.04675555-33.04675556-33.04675556s-33.04675555 14.76494222-33.04675556 33.04675556v351.56195555c0.70314667 18.28181333 15.46922667 33.04789333 33.04675556 33.04789333m307.96913778 0c18.28067555 0 33.04675555-14.76608 33.04675556-33.04789333v-351.56195555c0-18.28181333-14.76608-33.04675555-33.04675556-33.04675556s-33.04675555 14.76494222-33.04675556 33.04675556v351.56195555c0 18.28181333 14.76494222 33.04789333 33.04675556 33.04789333\"/></svg>";
+var icon_operation_9_code = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="icon" width="20px" height="20.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#595959" d="M764.42168889 830.5152c0 30.23530667-24.61013333 54.84430222-54.84316444 54.84430222H314.42147555c-30.23416889 0-54.84316445-24.61013333-54.84316444-54.84430222V248.32796445h504.84337778v582.18723555zM369.26577778 149.89084445c0-6.32832 4.92202667-11.25034667 11.25034667-11.25034667H644.18702222c6.32832 0 11.25034667 4.92202667 11.25034667 11.25034667v33.04675555H369.26577778V149.89084445z m559.68768 33.04675555H720.82773333V149.89084445c0-42.1888-34.45191111-76.64071111-76.64071111-76.64071112H380.51612445c-42.1888 0-76.64071111 34.45191111-76.64071112 76.64071112v33.04675555h-208.82773333c-18.28181333 0-33.04789333 14.76608-33.04789333 33.04675555s14.76608 33.04675555 33.04675555 33.04675556h98.43825778v581.48408889c0 66.79779555 54.14001778 120.93781333 120.93667555 120.93781333h395.1570489c66.79665778 0 120.93667555-54.14001778 120.93667555-120.93781333V248.32796445h98.43825778c18.28067555 0 33.04675555-14.76494222 33.04675555-33.04675556s-14.76608-32.34360889-33.04675555-32.34360889zM512 786.21923555c18.28181333 0 33.04675555-14.76608 33.04675555-33.04789333v-351.56195555c0-18.28181333-14.76494222-33.04675555-33.04675555-33.04675556s-33.04675555 14.76494222-33.04675555 33.04675556v351.56195555c0 18.28181333 14.76494222 33.04789333 33.04675555 33.04789333m-153.98456889 0c18.28181333 0 33.04675555-14.76608 33.04675556-33.04789333v-351.56195555c0-18.28181333-14.76494222-33.04675555-33.04675556-33.04675556s-33.04675555 14.76494222-33.04675556 33.04675556v351.56195555c0.70314667 18.28181333 15.46922667 33.04789333 33.04675556 33.04789333m307.96913778 0c18.28067555 0 33.04675555-14.76608 33.04675556-33.04789333v-351.56195555c0-18.28181333-14.76608-33.04675555-33.04675556-33.04675556s-33.04675555 14.76494222-33.04675556 33.04675556v351.56195555c0 18.28181333 14.76494222 33.04789333 33.04675556 33.04789333"/></svg>`;
 // Exports
 /* harmony default export */ const icon_operation_9 = (icon_operation_9_code);
-;// CONCATENATED MODULE: ./src/modules/table-operation-menu.js
+;// ./src/modules/table-operation-menu.js
 
 
 
@@ -1505,12 +1547,11 @@ class TableOperationMenu {
     document.removeEventListener("click", this.destroyHandler, false);
     return null;
   }
-  menuInitial(_ref) {
-    let {
-      table,
-      left,
-      top
-    } = _ref;
+  menuInitial({
+    table,
+    left,
+    top
+  }) {
     this.domNode = document.createElement('div');
     this.domNode.classList.add('qlbt-operation-menu');
     css(this.domNode, {
@@ -1576,12 +1617,11 @@ class TableOperationMenu {
     }
     return node;
   }
-  menuItemCreator(_ref2) {
-    let {
-      text,
-      iconSrc,
-      handler
-    } = _ref2;
+  menuItemCreator({
+    text,
+    iconSrc,
+    handler
+  }) {
     const node = document.createElement('div');
     node.classList.add('qlbt-operation-menu-item');
     const iconSpan = document.createElement('span');
@@ -1614,7 +1654,7 @@ function getColToolCellIndexesByBoundary(cells, boundary, conditionFn, container
     return findIndexes;
   }, []);
 }
-;// CONCATENATED MODULE: ./src/utils/node-matchers.js
+;// ./src/utils/node-matchers.js
 
 
 const Delta = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default()["import"]('delta');
@@ -1630,6 +1670,9 @@ function matchTableCell(node, delta, scroll) {
   const colspan = node.getAttribute('colspan') || false;
   const rowspan = node.getAttribute('rowspan') || false;
   const cellBg = node.getAttribute('data-cell-bg') || node.style.backgroundColor; // The td from external table has no 'data-cell-bg' 
+  const borderColor = node.style && (node.style.borderColor || node.style.borderTopColor || node.style.borderRightColor || node.style.borderBottomColor || node.style.borderLeftColor);
+  const cellBorder = node.getAttribute('data-cell-border') || (borderColor && convertToHex(borderColor) === '#fefefe' ? 'none' : undefined);
+  const cellValign = node.getAttribute('data-cell-valign');
 
   // bugfix: empty table cells copied from other place will be removed unexpectedly
   if (delta.length() === 0) {
@@ -1638,7 +1681,9 @@ function matchTableCell(node, delta, scroll) {
         row: rowId,
         cell: cellId,
         rowspan,
-        colspan
+        colspan,
+        'cell-border': cellBorder,
+        'cell-valign': cellValign
       }
     });
     return delta;
@@ -1679,7 +1724,9 @@ function matchTableCell(node, delta, scroll) {
           cell: cellId,
           rowspan,
           colspan,
-          'cell-bg': cellBg
+          'cell-bg': cellBg,
+          'cell-border': cellBorder,
+          'cell-valign': cellValign
         }
       }, _omit(op.attributes, ['table'])));
     } else {
@@ -1813,7 +1860,7 @@ function matchTable(node, delta, scroll) {
     }, new Delta());
   }
 }
-;// CONCATENATED MODULE: ./src/quill-better-table.js
+;// ./src/quill-better-table.js
 
 
 
@@ -1914,8 +1961,9 @@ class BetterTable extends Module {
     // since only one matched bindings callback will excute.
     // expected my binding callback excute first
     // I changed the order of binding callbacks
-    let thisBinding = quill.keyboard.bindings['Backspace'].pop();
-    quill.keyboard.bindings['Backspace'].splice(0, 1, thisBinding);
+    //explained here, change backspace to 8 https://github.com/soccerloway/quill-better-table/issues/93
+    let thisBinding = quill.keyboard.bindings['8'].pop();
+    quill.keyboard.bindings['8'].splice(0, 1, thisBinding);
 
     // add Matchers to match and render quill-better-table for initialization
     // or pasting
@@ -1929,8 +1977,7 @@ class BetterTable extends Module {
       return matcher[0] !== 'tr';
     });
   }
-  getTable() {
-    let range = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.quill.getSelection();
+  getTable(range = this.quill.getSelection()) {
     if (range == null) return [null, null, null, -1];
     const [cellLine, offset] = this.quill.getLine(range.index);
     if (cellLine == null || cellLine.statics.blotName !== TableCellLine.blotName) {
@@ -2227,7 +2274,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("9f9cfb4bf918febee5af")
+/******/ 		__webpack_require__.h = () => ("186c3138d7a2d95c81f9")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
@@ -2480,7 +2527,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 					if (idx >= 0) registeredStatusHandlers.splice(idx, 1);
 /******/ 				},
 /******/ 		
-/******/ 				//inherit from previous dispose call
+/******/ 				// inherit from previous dispose call
 /******/ 				data: currentModuleData[moduleId]
 /******/ 			};
 /******/ 			currentChildModule = undefined;
@@ -2572,11 +2619,10 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 							return waitForBlockingPromises(function () {
 /******/ 								if (applyOnUpdate) {
 /******/ 									return internalApply(applyOnUpdate);
-/******/ 								} else {
-/******/ 									return setStatus("ready").then(function () {
-/******/ 										return updatedModules;
-/******/ 									});
 /******/ 								}
+/******/ 								return setStatus("ready").then(function () {
+/******/ 									return updatedModules;
+/******/ 								});
 /******/ 							});
 /******/ 						});
 /******/ 					});
@@ -2691,7 +2737,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 		if (__webpack_require__.g.importScripts) scriptUrl = __webpack_require__.g.location + "";
 /******/ 		var document = __webpack_require__.g.document;
 /******/ 		if (!scriptUrl && document) {
-/******/ 			if (document.currentScript)
+/******/ 			if (document.currentScript && document.currentScript.tagName.toUpperCase() === 'SCRIPT')
 /******/ 				scriptUrl = document.currentScript.src;
 /******/ 			if (!scriptUrl) {
 /******/ 				var scripts = document.getElementsByTagName("script");
@@ -2966,15 +3012,12 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 				if (__webpack_require__.o(currentUpdate, moduleId)) {
 /******/ 					var newModuleFactory = currentUpdate[moduleId];
 /******/ 					/** @type {TODO} */
-/******/ 					var result;
-/******/ 					if (newModuleFactory) {
-/******/ 						result = getAffectedModuleEffects(moduleId);
-/******/ 					} else {
-/******/ 						result = {
-/******/ 							type: "disposed",
-/******/ 							moduleId: moduleId
-/******/ 						};
-/******/ 					}
+/******/ 					var result = newModuleFactory
+/******/ 						? getAffectedModuleEffects(moduleId)
+/******/ 						: {
+/******/ 								type: "disposed",
+/******/ 								moduleId: moduleId
+/******/ 							};
 /******/ 					/** @type {Error|false} */
 /******/ 					var abortError = false;
 /******/ 					var doApply = false;
@@ -3225,17 +3268,17 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__912__;
 /******/ 										moduleId: moduleId,
 /******/ 										module: __webpack_require__.c[moduleId]
 /******/ 									});
-/******/ 								} catch (err2) {
+/******/ 								} catch (err1) {
 /******/ 									if (options.onErrored) {
 /******/ 										options.onErrored({
 /******/ 											type: "self-accept-error-handler-errored",
 /******/ 											moduleId: moduleId,
-/******/ 											error: err2,
+/******/ 											error: err1,
 /******/ 											originalError: err
 /******/ 										});
 /******/ 									}
 /******/ 									if (!options.ignoreErrored) {
-/******/ 										reportError(err2);
+/******/ 										reportError(err1);
 /******/ 										reportError(err);
 /******/ 									}
 /******/ 								}

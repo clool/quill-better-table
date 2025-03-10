@@ -16,11 +16,16 @@ export function matchTableCell (node, delta, scroll) {
   const colspan = node.getAttribute('colspan') || false
   const rowspan = node.getAttribute('rowspan') || false
   const cellBg = node.getAttribute('data-cell-bg') || node.style.backgroundColor // The td from external table has no 'data-cell-bg' 
+    const borderColor = node.style && (node.style.borderColor || node.style.borderTopColor || node.style.borderRightColor || node.style.borderBottomColor || node.style.borderLeftColor);
+    const cellBorder = node.getAttribute('data-cell-border') ||
+       (borderColor && convertToHex(borderColor) === '#fefefe' ? 'none': undefined);
+
+    const cellValign = node.getAttribute('data-cell-valign');
 
   // bugfix: empty table cells copied from other place will be removed unexpectedly
   if (delta.length() === 0) {
     delta = new Delta().insert('\n', {
-      'table-cell-line': { row: rowId, cell: cellId, rowspan, colspan }
+            'table-cell-line': { row: rowId, cell: cellId, rowspan, colspan, 'cell-border': cellBorder, 'cell-valign': cellValign }
     })
     return delta
   }
@@ -63,7 +68,7 @@ export function matchTableCell (node, delta, scroll) {
       newDelta.insert(op.insert, Object.assign(
         {},
         Object.assign({}, { row: rowId }, op.attributes.table),
-        { 'table-cell-line': { row: rowId, cell: cellId, rowspan, colspan, 'cell-bg': cellBg } },
+                { 'table-cell-line': { row: rowId, cell: cellId, rowspan, colspan, 'cell-bg': cellBg, 'cell-border': cellBorder, 'cell-valign': cellValign } },
         _omit(op.attributes, ['table'])
       ))
     } else {
